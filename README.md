@@ -3,7 +3,7 @@
 This project contains an analysis of shampoo bottles screwcap data in R.  
 The majority of the project consists in exploring the data through descriptive statistics, oulier identification, principal components analysis and clustering. A basic predictive model for the price of screwcaps is also implemented via linear regression.
 
-This work was part of an assignment for a Machine Learning course at École Polytechnique. Only the main results are presented in this README. To see the full work, including code and interpretations of the results below, click [here](https://github.com/clemonster/easy-cost/blob/master/full_analysis.md).
+This work was part of an assignment for a Machine Learning course at École Polytechnique. Only the main results are presented in this README. To see the full work, including code and interpretations of the results below, click [here](full_analysis.md).
 
 Motivation
 ----------------------
@@ -77,8 +77,8 @@ We find the following 3 centroids:
 
 ```
 ##        Dim.1       Dim.2       Dim.3
-## 1 -0.5458881  0.04781496 -0.01817239
-## 2  4.5230724 -0.39618106  0.15057123
+## 1  4.5230724 -0.39618106  0.15057123
+## 2 -0.5458881  0.04781496 -0.01817239
 ```
 
 Here is a plot of the obtained clustering.
@@ -146,6 +146,6 @@ summary(res.lm2)
 ```
 
 
-**See the rest of the analysis in the [full analysis notebook](https://github.com/clemonster/easy-cost/blob/master/full_analysis.md)**
+**See the rest of the analysis in the [full analysis notebook](full_analysis.md)**
 
 
