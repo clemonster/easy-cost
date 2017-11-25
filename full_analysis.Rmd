@@ -197,7 +197,7 @@ proj <- data.frame(res.pca_3c$ind$coord)
       yaxis = list(title = "Principal Component 2"),
       zaxis = list(title = "Principal Component 3")
     ))
- p
+ #p
 ```
 
 **11) Performs an AHC on the selected k principal components of PCA.**
@@ -310,7 +310,7 @@ What we see is that Unit Price depends on the categorical variables Supplier, Sh
 Unit Price increases with Diameter and Number of pieces - as well as with length and weight which are correlated to diameter. This makes sense.
 Unit Price decreases with Mature Volume, which indicates that the company gives discounts for large orders.
 
-** If someone ask you why you did one global model and not one model per supplier, what is your answer? **
+**If someone ask you why you did one global model and not one model per supplier, what is your answer? **
 
 If we had done one model per supplier, we would have had much less data for each model, which is generally bad.  
 More importantly, we would have had different estimates for the coefficients in each model. How would we make sense of different mature.volume coefficients for different suppliers ? We also would not be able to measure the effect on price of a change in supplier: our whole model would change as soon as we change suppliers !
