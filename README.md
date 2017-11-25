@@ -3,7 +3,13 @@
 This project contains an analysis of shampoo bottles screwcap data in R.  
 The majority of the project consists in exploring the data through descriptive statistics, oulier identification, principal components analysis and clustering. A basic predictive model for the price of screwcaps is also implemented via linear regression.
 
-This work was part of an assignment for a Machine Learning course at École Polytechnique. Only the main results are presented in this README. To see the full work, including code and interpretations of the results below, click here.
+This work was part of an assignment for a Machine Learning course at École Polytechnique. Only the main results are presented in this README. To see the full work, including code and interpretations of the results below, click [here](https://github.com/clemonster/easy-cost/blob/master/full_analysis.md).
+
+Motivation
+----------------------
+
+A common approach to determine the cost of products is the **should cost method**. It consists in estimating what a product should cost based on materials, labor, overhead, and proﬁt margin. Although this strategy is very accurate, it has the drawback of being tedious and it requires expert knowledge of industrial technologies and processes. To get a quick estimation, it is possible to build a statistical model to predict the price of products given their characteristics. With such a model, it would no longer be necessary to be an expert or to wait several days to assess the impact of a design modiﬁcation, a change in supplier or a change in production site.  
+Before builing a model, it is important to explore the data. This "data exploration" is the main focus of my project, though a basic predictive model is built at the end.
 
 Installation
 ----------------------
@@ -48,7 +54,7 @@ Main results
 
 
 
-####Principal Components analysis
+**Principal Components analysis**
 
 
 
@@ -60,7 +66,7 @@ res.pca <- PCA(screw, scale.unit = TRUE, quali.sup = c(1,5,6,7,9), quanti.sup = 
 ![](README_files/figure-html/unnamed-chunk-6-1.png)<!-- -->![](README_files/figure-html/unnamed-chunk-6-2.png)<!-- -->
 
 
-####K-means clustering
+**K-means clustering**
 
 We perform a clustering along the first 3 first principal components of our data (which retain 99% of the total variance of the data). We choose to fit 2 clusters (elbow method analysis available in full work)
 
@@ -88,14 +94,14 @@ scatterplot3d(x = proj[,1], y = proj[,2], z = proj[,3], color = res.kmeans$clust
 ![](README_files/figure-html/unnamed-chunk-9-1.png)<!-- -->
 
 
-####Hierarchical clustering
+**Hierarchical clustering**
 
 We also try another clustering method on our data: Agglomerated Hierachical Clustering. This time we choose the number of clusters with the higher relative loss of inertia. We end up with 3 clusters.
 
 ![](README_files/figure-html/unnamed-chunk-10-1.png)<!-- -->![](README_files/figure-html/unnamed-chunk-10-2.png)<!-- -->![](README_files/figure-html/unnamed-chunk-10-3.png)<!-- -->
 
 
-####Linear regression
+**Linear regression**
 
 Finally, we fit a linear regression model (without interaction terms) on our data to predict the unit Price of screwcaps.  
 
@@ -139,5 +145,7 @@ summary(res.lm2)
 ## F-statistic: 48.22 on 11 and 183 DF,  p-value: < 2.2e-16
 ```
 
+
+**See the rest of the analysis in the [full analysis notebook](https://github.com/clemonster/easy-cost/blob/master/full_analysis.md)**
 
 

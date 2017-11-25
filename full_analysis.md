@@ -1,6 +1,12 @@
 # Easy Cost
 Clement Ponsonnet  
 
+A common approach to determine the cost of products is the should cost method. It consists in estimating what a product should cost based on materials, labor, overhead, and proﬁt margin. Although this strategy is very accurate, it has the drawback of being tedious and it requires expert knowledge of industrial technologies and processes. To get a quick estimation, it is possible to build a statistical model to predict the price of products given their characteristics. With such a model, it would no longer be necessary to be an expert or to wait several days to assess the impact of a design modiﬁcation, a change in supplier or a change in production site.  
+Before builing a model, it is important to explore the data which is the aim of this case study. 
+
+This study was commissioned by a cosmetics company that wants to estimate the price of Screw Caps (bouchon Ã vis) of shampoo bottles:
+
+
 ##Preparation
 
 Load libraries
