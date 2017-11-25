@@ -2,7 +2,8 @@
 title: "Easy Cost"
 author: "Clement Ponsonnet"
 output:
-  html_document: default
+  html_document:
+    keep_md : true
   html_notebook: default
 ---
 
@@ -10,7 +11,7 @@ output:
 
 Load libraries
 
-```{r eval=TRUE}
+```{r eval=TRUE, message=FALSE, warning=FALSE}
 library(dplyr)
 library(FactoMineR)
 library(ggplot2)
@@ -36,8 +37,8 @@ summary(screw)
 
 * *How is the distribution of the Price? Comment your plot with respect to the quartiles of the Price*
 ```{r}
-plot(density(screw$Price), xlab = "Price")
-boxplot(screw$Price)
+plot(density(screw$Price), xlab = "Price", main="Price distribution")
+boxplot(screw$Price, ylab = "Price", main = "Boxplot of Price")
 
 ```
 
@@ -73,11 +74,12 @@ And so the least expensive supplier on average is supplier C. This does not tell
 **3) One important point in exploratory data analysis consists in identifying potential outliers. Could you give points which are suspect regarding the Mature.Volume variable? Give the characteristics (other features) of the observations that seem suspect.**
 
 ```{r}
-boxplot(screw$Mature.Volume)
+boxplot(screw$Mature.Volume, ylab = "Mature Volume", main = "Boxplot of Mature Volume (with outliers")
 
 outlier_values <- boxplot.stats(screw$Mature.Volume)$out
 paste("There are", length(outlier_values), "outliers")
 
+print("Here is the list of outliers")
 screw %>%
   filter(Mature.Volume %in% outlier_values)
 ```
@@ -315,8 +317,9 @@ More importantly, we would have had different estimates for the coefficients in 
 Our model is more parcimonious: all the other coefficients stay the same regardless of the supplier, only the supplier coefficient changes, when we change supplier. In effect, a change of supplier will induce an additive change in price. This is more easy to interpret than 3 different models for the 3 suppliers 
 
 **18) These data contained missing values.** 
-* ** One representative in the compagny suggests either to put 0 in the missing cells or to impute with the median of the variables. Comment.**
-  - This would be a terrible idea. Imputing by the median or 0 would in both cases cause us to misestimate the mean of our data, as their is no reason the median or 0 would be equal to the mean. We would also underestimate the variance and correlation of our data.
+
+**One representative in the compagny suggests either to put 0 in the missing cells or to impute with the median of the variables. Comment.**  
+This would be a terrible idea. Imputing by the median or 0 would in both cases cause us to misestimate the mean of our data, as their is no reason the median or 0 would be equal to the mean. We would also underestimate the variance and correlation of our data.
   
-* **For the categorical variables with missing values, it is decided to create a new category “missing”. Comment**
-  - This is another bad idea. Our categorical variables can take on a set of levels, and nothing else. Though it was not recorded for some reason, a missing value corresponds to one of those levels. In our "missing" category, we would therefore have a bunch of observations that correspond to completely different levels. Artificially introducing this new level is bad statistical practice.
+**For the categorical variables with missing values, it is decided to create a new category “missing”. Comment**  
+This is another bad idea. Our categorical variables can take on a set of levels, and nothing else. Though it was not recorded for some reason, a missing value corresponds to one of those levels. In our "missing" category, we would therefore have a bunch of observations that correspond to completely different levels. Artificially introducing this new level is bad statistical practice.
