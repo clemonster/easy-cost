@@ -1,0 +1,322 @@
+---
+title: "Easy Cost"
+author: "Clement Ponsonnet"
+output:
+  html_document: default
+  html_notebook: default
+---
+
+##Preparation
+
+Load libraries
+
+```{r eval=TRUE}
+library(dplyr)
+library(FactoMineR)
+library(ggplot2)
+library(plotly)
+```
+
+
+Load the data, and have a look at it.
+
+```{r}
+screw <- read.csv("ScrewCaps.csv")
+#Take out the first column (it is just indices)
+screw <- screw[-1]
+head(screw)
+summary(screw)
+
+```
+
+##Questions
+
+**2) We start with univariate and bivariate descriptive statistics. Using appropriate plot(s) or summaries** 
+**answer the following questions**
+
+* *How is the distribution of the Price? Comment your plot with respect to the quartiles of the Price*
+```{r}
+plot(density(screw$Price), xlab = "Price")
+boxplot(screw$Price)
+
+```
+
+The distribution is not symmetric: its right tail is longer than the left tail. We see this in the quartiles as well: the distance between the distance between the quartiles increases. The distribution has a peak around a price of 15, and another much smaller peak around 30. 
+This looks like it could be a mixture of two gaussian randon variables
+
+* *Does the Price depend on the Length? weight?*
+```{r}
+cor(screw$Price, screw$Length)
+cor(screw$Price, screw$weight)
+cor(screw$Length,screw$weight)
+
+```
+There appears to be a positive relationship between Price and both Length and weight. We should note that Length and weight are very highly correlated.
+
+* *Does the Price depend on the Impermeability? Shape?*
+```{r}
+summary(lm(screw$Price ~ screw$Impermeability))
+summary(lm(screw$Price ~ screw$Shape))
+```
+The F-statistic is a measure of the difference between our linear model and an intercept only model. Because it is in both cases very significant, we can say that Price depends on both Impermeability and Shape
+
+* *Which is the less expensive Supplier?*
+
+```{r}
+screw %>%
+  group_by(Supplier)%>%
+    summarise(mean = mean(Price))
+  
+```
+And so the least expensive supplier on average is supplier C. This does not tell us if the difference is statistically significant.
+
+**3) One important point in exploratory data analysis consists in identifying potential outliers. Could you give points which are suspect regarding the Mature.Volume variable? Give the characteristics (other features) of the observations that seem suspect.**
+
+```{r}
+boxplot(screw$Mature.Volume)
+
+outlier_values <- boxplot.stats(screw$Mature.Volume)$out
+paste("There are", length(outlier_values), "outliers")
+
+screw %>%
+  filter(Mature.Volume %in% outlier_values)
+```
+So we have 16 outliers, which all have extremely high volumes. They are all of type 1 and mostly shape 1. We would like to verify that it is not simply the whole group of type 1 and shape 1 that exhibits a high volume. If that were the case, we should not treat this data as outliers.
+
+```{r}
+sum((boxplot.stats((screw %>%
+          filter(Impermeability == "Type 1" && Shape == "Shape 1"))$Mature.Volume)$out) == outlier_values)
+
+```
+
+What the previous analysis shows is that all the outliers we found are still outliers, even after when we look only at the group (type1, shape1). So these datapoints should be treated as outliers.
+
+**4 - Perform a PCA on the dataset ScrewCap, explain brieﬂy what are the aims of PCA and how categorical variables are handled?**
+
+The PCA consists in finding a low dimensional representation of our data in a way that will best retain the variability of the data. Specifically, it finds  orthogonal "directions" along which our data has the highest variance possible. 
+
+Only numerical variables are used to find these directions. Categorical data is typically used as supplementary information: we study the  projection of the categories at the barycentre of the observations which take the categories.  
+Here we also treat price as a supplementary variable since the goal of our analysis is to estimate price
+
+```{r}
+res.pca <- PCA(screw, scale.unit = TRUE, quali.sup = c(1,5,6,7,9), quanti.sup = 10)
+```
+
+**Compute the correlation matrix between the variables and comment it with respect to the correlation circle.  **
+
+```{r}
+cor(screw %>% select_if(is.numeric))
+```
+What we see from the correlation matrix is that Diameter, weight, and Length are extremely highly correlated to each other. Price is also positively correlated to these 3 variables. Number of pieces and Mature Volume are not strongly correlated to any other variables.  
+This is confirmed by the PCA correlation circle. We see that the first direction computed by the PCA is parallel to diameter, weight and length. The projection of price depends mostly on the first price. The second direction is parallel to number of pieces.
+
+**6 - On what kind of relationship PCA focuses? Is it a problem?**
+
+PCA only focuses on linear relationships between the data. This can be a problem if there exist non-linear relationships between our data => PCA would miss them.
+
+**7 -  Comment the PCA outputs.**
+
+As we have said, the first principal component is extremely correlated to diameter weight and length. It is strongly correlated to price.  From the individuals factor map we see that individuals are not evenly distributed along this component: Most individuals are slightly below the mean, and a few are far above the mean.  
+The second principal component is quite positively correlated to number of pieces.
+
+Price is not perfectly explained by the two first principal components, as the length of the vector on the variables factor map is smaller than 1. This is even  more true for Number of pieces.
+
+* **Comment the position of the categories Impermeability=type 2 and Raw.Material=PS**
+
+```{r}
+plot.PCA(res.pca, choix = c("ind"), label = "quali", col.ind = "pink", col.quali = "black", autoLab = "yes", cex = 0.8)
+```
+
+* So we see that Impermeability = type 2 and Raw.material = PS are quite close on the individuals factor map, indicating that those two groups are similar. They are both along the first principal component, with quite high values for this component compared to the rest of the data. Their projection onto the second component is close to 0. So these groups depend mostly on the first component.
+
+* **Comment the percentage of inertia**
+We see that 61.49 % of the variability of our data is captured by the first component, while the second one captures an additional 21.09 % of the total variability.  
+So overall, with the two first components alone we capture over 82 % of the variability of our data. This is satisfying: we have found a quite good low dimensional representation of our data. 
+
+**8) Give the the R object with the two principal components which are the synthetic variables the most correlated to all the variables.**
+
+```{r}
+res.pca$var$coord[,1:2]
+```
+
+**9) PCA is often used as a pre-processing step before applying a clustering algorithm, explain the rationale of this approach and how many components k you keep**
+
+Preprocessing our data with a PCA is often used to 'denoise the data' before applying a clustering algorithm, and makes the clustering more stable. In general, we will choose the minimum number of principal components necessary to retain a certain amount (often 95%) of the variation of our data.  
+We could also use the elbow rule.
+
+```{r}
+res.pca$eig
+
+plot(res.pca$eig[,1], type="l", ylab = "Eigenvalue")
+```
+
+Here in fact, we see that there is no clear "elbow" in our graph, so we will stick to the first heuristic: retain at least 95% of the total variance of our dataset.  
+By looking at the cumulative percentage of variance column in our table, we see that this is achieved by keeping the first 3 principal components, and in fact we retain 99% of the variance.
+
+**10) Perform a kmeans algorithm on the selected k principal components of PCA. How many cluster are you keeping? Justify**
+
+```{r}
+res.pca_3c <- PCA(screw, ncp=3, scale.unit = TRUE, quali.sup = c(1,5,6,7,9), quanti.sup = 10)
+```
+We will be doing the clustering on this projection.  
+To choose the number of clusters, we use the elbow method (we plot only up to 8 clusters)
+
+```{r}
+wss <- sapply(1:8, 
+              function(k){kmeans(res.pca_3c$ind$coord, k, nstart=50,iter.max = 15 )$tot.withinss})
+
+plot(1:8, wss,
+     type="b", pch = 19, frame = FALSE, 
+     xlab="Number of clusters K",
+     ylab="Total within-clusters sum of squares")
+```
+
+The plot does not exhibit a clear "elbow", which indicates that our data is not very clustered originally. We choose to have 2 clusters as this is where the inflexion point seems to be.
+
+We plot our clustering in 3D using the *plotly* library. (Note: the plot may slow down our notebook. If this is the case, comment out the plot lines)
+
+```{r}
+res.kmeans <- kmeans(res.pca_3c$ind$coord, 2)
+
+print("These are the center of the clusters we have found ")
+res.kmeans$centers
+
+#res.kmeans$cluster
+
+##Can plot using plotly but very slow !
+## Comment out the following lines if it is too slow
+proj <- data.frame(res.pca_3c$ind$coord)
+ p <- plot_ly(data = proj, x = proj[,1], y = proj[,2], z = proj[,3], color = res.kmeans$cluster, colors = "Set1") %>%
+   add_markers() %>%
+   layout(
+    title = "Clustering on PCA output",
+    scene = list(
+      xaxis = list(title = "Principal Component 1"),
+      yaxis = list(title = "Principal Component 2"),
+      zaxis = list(title = "Principal Component 3")
+    ))
+ p
+```
+
+**11) Performs an AHC on the selected k principal components of PCA.**
+
+```{r}
+res.hcpc <- HCPC(res.pca_3c, nb.clust=-1)
+```
+
+**12) Comments the results and describe precisely one cluster.**
+
+Comments: by specifying *nb.clust=-1* in our call, the HCPC used cross-validation to find the optimal number of clusters for our data. We see that the best number of clusters is **3**, which indicates that we chose the wrong number of clusters with the elbow rule in question 10.  
+We can also note that the projection of our clustered data onto the first two principal components (as seen in the factor map) seems to remain well clustered. This makes sense since these two principal components explain more than 80% of the variance in our data.
+
+To describe precisely the first cluster, we can do the following:
+
+```{r}
+res.hcpc$desc.var$quanti$'1'
+```
+
+We see that the first centroid exhibits very high mature.volume, low diameter, low length, low weight, low price and high number of pieces, compared to the overall average. All p-values are highly significant indicating that the first cluster is significantly different to the rest of the data.
+
+**13) If someone ask you why you have selected k components and not k +1 or k−1, what is your answer? (could you suggest a strategy to assess the stability of the approach? - are there many diﬀerences between the clustering obtained on k components or on the initial data)**
+
+We chose 3 components in order to retain 99% of the total variance of our data, and remove some of the noise associated to the remaining 1%.
+
+To assess the stability of the approach, we cluster the initial data. Note we can just cluster the data projected onto all principal components (in the res.pca object) and get the same clustering. The advantage of doing this is that the projected data is already scaled, which is important for the clustering.
+```{r}
+
+scaled <- as.data.frame(scale(screw %>% select_if(is.numeric)))
+
+res.hcpc_init <- HCPC(res.pca, nb.clust=-1)
+
+```
+
+We notice that the optimal number of clusters is still 3. 
+
+We want to compute partition quality for both clusterings. The partition quality is defined as $$\frac{\text{between inertia}}{\text{total inertia}}$$
+Remember that total inertia corresponds to the sum of the eigenvalues found in the pca.
+```{r}
+#between inertia
+
+total_inertia <- sum(res.pca$eig[1:3,1])
+total_inertia2 <- sum(res.pca$eig[,1])
+
+print("The partition quality for the clustering on the 3 principal components (ratio of between inertia to total inertia) is:")
+res.hcpc$call$bw.after.consol / total_inertia
+print("The partition quality for the clustering on the inital data is: ")
+res.hcpc_init$call$bw.after.consol / total_inertia2
+
+```
+
+And we see that the partition quality is slightly better for the clustering on the 3 first principal components. However the values are very close, and overall the approach is stable. 
+
+**14) The methodology that you have used to describe clusters can also be used to describe a categorical variable, for instance the supplier. Use the function catdes(data, num.var=1) and explain how this information can be useful for the compagny**
+
+```{r}
+catdes(screw, num.var = 1)
+```
+
+This function is very useful. It allows us, for a given categorical variable in our data, to investigate:
+* the variable's dependence to other categorical variables (chi2 test)
+* the variable's dependence (correlation) to the numerical variables in our dataset
+* the description of each  category of the variable, by the other variables in the dataset which exhibit a significant dependence to that variable.
+
+For example, our call to the catdes function for the supplier variable taught us that :
+* There is a significant dependence between supplier and the variables Raw material, impermeability, and number of pieces. Products which use supplier C have the highest number of pieces
+* There is no significant dependence between supplier and price.
+
+This is all important information for the company.
+
+**15) To simultaneously take into account quantitative and categorical variables in the clustering you should use the HCPC function on the results of the FAMD ones. FAMD stands for Factorial Analysis of Mixed Data and is a PCA dedicated to mixed data. Explain what will be the impacts of such an analysis on the results?**
+
+The impact will be that our clustering will now depend on the categorical variables as well as the quantitative ones.  
+Let's perform FAMD and see what happens:
+
+```{r}
+FAMD(screw, sup.var = 11, ncp = 14)$eig
+
+```
+
+We see that when we do FAMD on our data, the first principal components calculated do not retain much of the total variance of our data: the variance is split between many principal components. So we cannot find a good low dimensional representation of our data. 
+
+To retain enough variation, we could do the clustering on a large number of principal components. However, clustering performs poorly in high dimensional spaces (curse of dimensionality).  
+Or we could choose only the first few principal components to do the clustering. In this case however, we will have lost a significant portion of the variance of our data set : the projection on the principal components will be a poor approximation of our data set, and the clustering obtained may not be useful to describe the original dataset. 
+
+**16) Perform a model to predict the Price. Explain how the previous analysis can help you to interpret the results.**
+
+We will fit a linear model. We remember Diameter, weight and length are all extremely correlated, with pairwise correlation coefficients > 95%. To avoid multicollinearity, we do not include the weight and length variables in our model, only Diameter.
+
+Because the model space is very high dimensional, we cannot explore all possible linear models. We will use a step-wise approach.  
+Let's first fit the model with all variables (except wight and length), but no interaction terms. 
+
+```{r}
+res.lm1 <- lm(data = screw, formula = Price ~ Supplier + Diameter + nb.of.pieces + Shape + Impermeability + Finishing + Mature.Volume + Raw.Material)
+summary(res.lm1)
+```
+
+We see that we can drop the finishing variable
+
+```{r}
+res.lm2 <- lm(data = screw, formula = Price ~ Supplier + Diameter + nb.of.pieces + Shape + Impermeability + Mature.Volume + Raw.Material)
+summary(res.lm2)
+```
+
+We cannot drop anymore predictors (if at least one level of a categorical variable is statistically significant, we must keep all levels). We will stop here though we could have tried to fit models with interaction terms.
+
+Our predictive model is described in the summary of the lm output. We are interested in the estimates of the coefficients.
+
+What we see is that Unit Price depends on the categorical variables Supplier, Shape, Impermeability and Raw Material. 
+Unit Price increases with Diameter and Number of pieces - as well as with length and weight which are correlated to diameter. This makes sense.
+Unit Price decreases with Mature Volume, which indicates that the company gives discounts for large orders.
+
+** If someone ask you why you did one global model and not one model per supplier, what is your answer? **
+
+If we had done one model per supplier, we would have had much less data for each model, which is generally bad.  
+More importantly, we would have had different estimates for the coefficients in each model. How would we make sense of different mature.volume coefficients for different suppliers ? We also would not be able to measure the effect on price of a change in supplier: our whole model would change as soon as we change suppliers !
+Our model is more parcimonious: all the other coefficients stay the same regardless of the supplier, only the supplier coefficient changes, when we change supplier. In effect, a change of supplier will induce an additive change in price. This is more easy to interpret than 3 different models for the 3 suppliers 
+
+**18) These data contained missing values.** 
+* ** One representative in the compagny suggests either to put 0 in the missing cells or to impute with the median of the variables. Comment.**
+  - This would be a terrible idea. Imputing by the median or 0 would in both cases cause us to misestimate the mean of our data, as their is no reason the median or 0 would be equal to the mean. We would also underestimate the variance and correlation of our data.
+  
+* **For the categorical variables with missing values, it is decided to create a new category “missing”. Comment**
+  - This is another bad idea. Our categorical variables can take on a set of levels, and nothing else. Though it was not recorded for some reason, a missing value corresponds to one of those levels. In our "missing" category, we would therefore have a bunch of observations that correspond to completely different levels. Artificially introducing this new level is bad statistical practice.
