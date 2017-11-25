@@ -10,7 +10,7 @@ Load libraries
 library(dplyr)
 library(FactoMineR)
 library(ggplot2)
-library(plotly)
+library(scatterplot3d)
 ```
 
 
@@ -415,7 +415,6 @@ plot(1:8, wss,
 
 The plot does not exhibit a clear "elbow", which indicates that our data is not very clustered originally. We choose to have 2 clusters as this is where the inflexion point seems to be.
 
-We plot our clustering in 3D using the *plotly* library. (Note: the plot may slow down our notebook. If this is the case, comment out the plot lines)
 
 
 ```r
@@ -434,27 +433,22 @@ res.kmeans$centers
 
 ```
 ##        Dim.1       Dim.2       Dim.3
-## 1 -0.5458881  0.04781496 -0.01817239
-## 2  4.5230724 -0.39618106  0.15057123
+## 1  4.5230724 -0.39618106  0.15057123
+## 2 -0.5458881  0.04781496 -0.01817239
 ```
+
+We plot our clustering in 3D using the *scatterplot3d* library. (Note: the plot may slow down our notebook. If this is the case, comment out the plot lines)
+
 
 ```r
-#res.kmeans$cluster
-
-##Can plot using plotly but very slow !
-## Comment out the following lines if it is too slow
 proj <- data.frame(res.pca_3c$ind$coord)
- p <- plot_ly(data = proj, x = proj[,1], y = proj[,2], z = proj[,3], color = res.kmeans$cluster, colors = "Set1") %>%
-   add_markers() %>%
-   layout(
-    title = "Clustering on PCA output",
-    scene = list(
-      xaxis = list(title = "Principal Component 1"),
-      yaxis = list(title = "Principal Component 2"),
-      zaxis = list(title = "Principal Component 3")
-    ))
- #p
+
+scatterplot3d(x = proj[,1], y = proj[,2], z = proj[,3], color = res.kmeans$cluster,
+              xlab="Principal Component 1" , ylab="Principal Component 2" , zlab="Principal Component 3" )
 ```
+
+![](full_analysis_files/figure-html/unnamed-chunk-17-1.png)<!-- -->
+
 
 **11) Performs an AHC on the selected k principal components of PCA.**
 
@@ -463,7 +457,7 @@ proj <- data.frame(res.pca_3c$ind$coord)
 res.hcpc <- HCPC(res.pca_3c, nb.clust=-1)
 ```
 
-![](full_analysis_files/figure-html/unnamed-chunk-17-1.png)<!-- -->![](full_analysis_files/figure-html/unnamed-chunk-17-2.png)<!-- -->![](full_analysis_files/figure-html/unnamed-chunk-17-3.png)<!-- -->
+![](full_analysis_files/figure-html/unnamed-chunk-18-1.png)<!-- -->![](full_analysis_files/figure-html/unnamed-chunk-18-2.png)<!-- -->![](full_analysis_files/figure-html/unnamed-chunk-18-3.png)<!-- -->
 
 **12) Comments the results and describe precisely one cluster.**
 
@@ -508,7 +502,7 @@ scaled <- as.data.frame(scale(screw %>% select_if(is.numeric)))
 res.hcpc_init <- HCPC(res.pca, nb.clust=-1)
 ```
 
-![](full_analysis_files/figure-html/unnamed-chunk-19-1.png)<!-- -->![](full_analysis_files/figure-html/unnamed-chunk-19-2.png)<!-- -->![](full_analysis_files/figure-html/unnamed-chunk-19-3.png)<!-- -->
+![](full_analysis_files/figure-html/unnamed-chunk-20-1.png)<!-- -->![](full_analysis_files/figure-html/unnamed-chunk-20-2.png)<!-- -->![](full_analysis_files/figure-html/unnamed-chunk-20-3.png)<!-- -->
 
 We notice that the optimal number of clusters is still 3. 
 
@@ -633,7 +627,7 @@ Let's perform FAMD and see what happens:
 FAMD(screw, sup.var = 11, ncp = 14)$eig
 ```
 
-![](full_analysis_files/figure-html/unnamed-chunk-22-1.png)<!-- -->![](full_analysis_files/figure-html/unnamed-chunk-22-2.png)<!-- -->![](full_analysis_files/figure-html/unnamed-chunk-22-3.png)<!-- -->![](full_analysis_files/figure-html/unnamed-chunk-22-4.png)<!-- -->![](full_analysis_files/figure-html/unnamed-chunk-22-5.png)<!-- -->
+![](full_analysis_files/figure-html/unnamed-chunk-23-1.png)<!-- -->![](full_analysis_files/figure-html/unnamed-chunk-23-2.png)<!-- -->![](full_analysis_files/figure-html/unnamed-chunk-23-3.png)<!-- -->![](full_analysis_files/figure-html/unnamed-chunk-23-4.png)<!-- -->![](full_analysis_files/figure-html/unnamed-chunk-23-5.png)<!-- -->
 
 ```
 ##         eigenvalue percentage of variance

@@ -15,7 +15,7 @@ Load libraries
 library(dplyr)
 library(FactoMineR)
 library(ggplot2)
-library(plotly)
+library(scatterplot3d)
 ```
 
 
@@ -175,30 +175,23 @@ plot(1:8, wss,
 
 The plot does not exhibit a clear "elbow", which indicates that our data is not very clustered originally. We choose to have 2 clusters as this is where the inflexion point seems to be.
 
-We plot our clustering in 3D using the *plotly* library. (Note: the plot may slow down our notebook. If this is the case, comment out the plot lines)
 
 ```{r}
 res.kmeans <- kmeans(res.pca_3c$ind$coord, 2)
 
 print("These are the center of the clusters we have found ")
 res.kmeans$centers
-
-#res.kmeans$cluster
-
-##Can plot using plotly but very slow !
-## Comment out the following lines if it is too slow
-proj <- data.frame(res.pca_3c$ind$coord)
- p <- plot_ly(data = proj, x = proj[,1], y = proj[,2], z = proj[,3], color = res.kmeans$cluster, colors = "Set1") %>%
-   add_markers() %>%
-   layout(
-    title = "Clustering on PCA output",
-    scene = list(
-      xaxis = list(title = "Principal Component 1"),
-      yaxis = list(title = "Principal Component 2"),
-      zaxis = list(title = "Principal Component 3")
-    ))
- #p
 ```
+
+We plot our clustering in 3D using the *scatterplot3d* library. (Note: the plot may slow down our notebook. If this is the case, comment out the plot lines)
+
+```{r}
+proj <- data.frame(res.pca_3c$ind$coord)
+
+scatterplot3d(x = proj[,1], y = proj[,2], z = proj[,3], color = res.kmeans$cluster,
+              xlab="Principal Component 1" , ylab="Principal Component 2" , zlab="Principal Component 3" )
+```
+
 
 **11) Performs an AHC on the selected k principal components of PCA.**
 
